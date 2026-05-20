@@ -18,6 +18,6 @@ EXPOSE 5000
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
 # Single worker is mandatory: APScheduler runs in-process
-CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:5000", "--timeout", "120", "app:app"]
+# PORT is injected by Railway (and other PaaS); falls back to 5000 locally
+CMD gunicorn -w 1 -b "0.0.0.0:${PORT:-5000}" --timeout 120 app:app
