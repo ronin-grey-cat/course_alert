@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Course Alert — SkillsFuture Monitor</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<header>
+  <h1>Course Alert</h1>
+  <p>Monitor SkillsFuture course availability and get notified when new runs open up</p>
+</header>
+
+<main>
+
+  <!-- Notification permission banner -->
+  <div id="notif-bar"></div>
+
+  <!-- Search -->
+  <section>
+    <h2>Find a course</h2>
+    <form class="search-box" id="search-form">
+      <input
+        type="text"
+        id="query"
+        placeholder="Search by name or TGS reference (e.g. TGS-2024042639)…"
+        autocomplete="off"
+        required
+      />
+      <button type="submit" id="search-btn">Search</button>
+    </form>
+  </section>
+
+  <!-- Search results -->
+  <section id="results-section" style="display:none">
+    <h2>Results</h2>
+    <div id="results-list"></div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- Watchlist -->
+  <section>
+    <h2>My watchlist</h2>
+    <div id="watchlist"></div>
+  </section>
+
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
