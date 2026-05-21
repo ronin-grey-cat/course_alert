@@ -47,39 +47,60 @@ async function initPush() {
 
     const permission = Notification.permission;
     if (permission === "denied") {
-      showNotifBar("warn", "Notifications blocked. Enable them in browser settings to get alerts.");
+      showNotifBar("warn", "Notifications blocked. Go to Settings → [app name] → Notifications to re-enable.");
       return;
     }
 
-    let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      if (permission !== "granted") {
-        const result = await Notification.requestPermission();
-        if (result === "denied") {
-          showNotifBar("warn", "Notifications blocked. Go to Settings → [app name] → Notifications to re-enable.");
-          return;
-        }
-        if (result !== "granted") {
-          showNotifBar("warn", "Notifications not enabled — you won't receive alerts when runs open up.");
-          return;
-        }
-      }
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: appKey,
-      });
-      await fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sub.toJSON()),
-      });
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      pushSubscription = sub;
+      showNotifBar("info", "Notifications enabled — you'll be alerted when a watched course gets new runs.");
+      setTimeout(() => hideNotifBar(), 4000);
+      return;
     }
 
+    if (permission === "granted") {
+      await _createSubscription(reg, appKey);
+      return;
+    }
+
+    // permission === "default": must request from a user gesture — show a button
+    showNotifBar(
+      "info",
+      "Get notified when a watched course gets new runs.",
+      "Enable notifications",
+      async () => {
+        const result = await Notification.requestPermission();
+        if (result === "granted") {
+          await _createSubscription(reg, appKey);
+        } else if (result === "denied") {
+          showNotifBar("warn", "Notifications blocked. Go to Settings → [app name] → Notifications to re-enable.");
+        } else {
+          showNotifBar("warn", "Notifications not enabled — you won't receive alerts when runs open up.");
+        }
+      }
+    );
+  } catch (err) {
+    console.warn("Push init error:", err);
+  }
+}
+
+async function _createSubscription(reg, appKey) {
+  try {
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: appKey,
+    });
+    await fetch("/api/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(sub.toJSON()),
+    });
     pushSubscription = sub;
     showNotifBar("info", "Notifications enabled — you'll be alerted when a watched course gets new runs.");
     setTimeout(() => hideNotifBar(), 4000);
   } catch (err) {
-    console.warn("Push init error:", err);
+    console.warn("Subscription error:", err);
   }
 }
 
@@ -292,11 +313,16 @@ async function onRemove(tgsRef) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function showNotifBar(type, msg) {
+function showNotifBar(type, msg, actionLabel, actionFn) {
   const bar = document.getElementById("notif-bar");
-  bar.textContent = msg;
   bar.className = type;
   bar.style.display = "block";
+  if (actionLabel && actionFn) {
+    bar.innerHTML = `${escHtml(msg)} <button class="btn btn-outline" style="margin-left:0.75rem;font-size:0.8125rem;padding:0.25rem 0.75rem">${escHtml(actionLabel)}</button>`;
+    bar.querySelector("button").addEventListener("click", actionFn);
+  } else {
+    bar.textContent = msg;
+  }
 }
 
 function hideNotifBar() {
