@@ -21,6 +21,17 @@ async function initPush() {
     return;
   }
 
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true ||
+                       window.matchMedia("(display-mode: standalone)").matches;
+  if (isIos && !isStandalone) {
+    showNotifBar(
+      "warn",
+      "On iPhone, tap Share → Add to Home Screen in Safari, then open the app from your home screen icon to enable notifications."
+    );
+    return;
+  }
+
   try {
     const reg = await navigator.serviceWorker.register("/sw.js");
     await navigator.serviceWorker.ready;
@@ -44,6 +55,10 @@ async function initPush() {
     if (!sub) {
       if (permission !== "granted") {
         const result = await Notification.requestPermission();
+        if (result === "denied") {
+          showNotifBar("warn", "Notifications blocked. Go to Settings → [app name] → Notifications to re-enable.");
+          return;
+        }
         if (result !== "granted") {
           showNotifBar("warn", "Notifications not enabled — you won't receive alerts when runs open up.");
           return;
