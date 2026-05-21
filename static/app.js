@@ -165,7 +165,7 @@ function renderCourseCard(course) {
           .slice(0, 5)
           .map(
             (r) => `<div class="run-item">
-              <span class="run-date">${formatDate(r.start_date)}</span>
+              <span class="run-date">${formatDate(r.start_date)}${r.end_date ? " – " + formatDate(r.end_date) : ""}</span>
               <span class="run-mode">${r.mode || ""}</span>
               <span class="run-vacancy">${r.vacancy || ""}</span>
             </div>`
@@ -194,7 +194,8 @@ function renderCourseCard(course) {
       <div class="card-header">
         <div>
           <div class="card-title">${escHtml(course.title)}</div>
-          <div class="card-sub">${escHtml(course.tgs_ref)}${course.provider ? " · " + escHtml(course.provider) : ""}</div>
+          <div class="card-sub">${escHtml(course.provider || course.tgs_ref)}</div>
+          ${course.fee ? `<div class="card-sub" style="margin-top:0.125rem">${escHtml(course.fee)}</div><div style="font-size:0.75rem;color:var(--muted);margin-top:0.125rem">Full fee · subsidies may apply — click View</div>` : ""}
         </div>
         <div class="card-actions">${viewBtn}${watchBtn}</div>
       </div>

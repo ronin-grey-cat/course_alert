@@ -120,20 +120,27 @@ def get_course_runs(tgs_ref: str, course_url: str = "") -> dict:
     if not course_url:
         course_url = _resolve_course_url(tgs_ref)
     if not course_url:
-        return {"tgs_ref": tgs_ref, "title": "", "provider": "", "course_url": "", "runs": []}
+        return {"tgs_ref": tgs_ref, "title": "", "provider": "", "fee": "", "course_url": "", "runs": []}
 
     html = _get(course_url)
     data = _extract_course_data(html)
     if not data:
-        return {"tgs_ref": tgs_ref, "title": "", "provider": "", "course_url": course_url, "runs": []}
+        return {"tgs_ref": tgs_ref, "title": "", "provider": "", "fee": "", "course_url": course_url, "runs": []}
 
     tps = data.get("trainingPartners") or data.get("trainingProviders") or []
-    provider = tps[0].get("name", "") if tps else ""
+    provider = tps[0].get("name", "") if tps else (data.get("trainingProviderAlias") or "")
+
+    fee_raw = data.get("totalCostOfTrainingPerTrainee")
+    try:
+        fee = f"S${float(fee_raw):,.2f}" if fee_raw is not None else ""
+    except (TypeError, ValueError):
+        fee = str(fee_raw) if fee_raw else ""
 
     return {
         "tgs_ref": data.get("courseReferenceNumber", tgs_ref),
         "title": data.get("courseTitle", ""),
         "provider": provider,
+        "fee": fee,
         "course_url": course_url,
         "runs": _parse_runs(data.get("courseRuns") or []),
     }
