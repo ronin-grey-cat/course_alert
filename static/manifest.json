@@ -1,0 +1,9 @@
+{
+  "name": "Course Alert",
+  "short_name": "Course Alert",
+  "description": "Monitor SkillsFuture course availability and get notified when new runs open up",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#2563eb"
+}

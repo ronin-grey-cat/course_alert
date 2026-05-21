@@ -56,6 +56,11 @@ def service_worker():
     return send_from_directory("static", "sw.js")
 
 
+@app.route("/manifest.json")
+def manifest():
+    return send_from_directory("static", "manifest.json")
+
+
 # ── API: VAPID public key ─────────────────────────────────────────────────────
 
 @app.route("/api/vapid-public-key")

@@ -2,9 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Running the app
+## Setup and running
 
 ```bash
+pip install -r requirements.txt
+
 # Development
 python3 app.py
 
@@ -97,7 +99,9 @@ Write serialisation uses a module-level `threading.Lock`. All writes go through 
 
 ### Push notifications
 
-`notifications.send_push()` writes the private key PEM to a temp file (pywebpush requires a file path, not an inline string), calls `pywebpush.webpush()`, then deletes the temp file. A 404/410 response from the push service means the subscription expired — the caller (`scheduler.run_checks`) deletes it from the DB.
+`notifications.send_push()` receives runs that have already been normalised by `scraper._parse_runs()` — keys are `schedule` and `start_date`, not the raw portal names `scheduleInfo`/`courseStartDate`. The date-formatting code inside `send_push` reads the raw key names and silently falls through, so the notification body always uses the fallback run-count string. Fix in `send_push` if you want the date/schedule to appear in the notification.
+
+`send_push()` writes the private key PEM to a temp file (pywebpush requires a file path, not an inline string), calls `pywebpush.webpush()`, then deletes the temp file. A 404/410 response from the push service means the subscription expired — the caller (`scheduler.run_checks`) deletes it from the DB.
 
 ### Frontend
 
@@ -111,4 +115,12 @@ docker run -d --name course_alert -p 5000:5000 \
   -v course_alert_data:/data --env-file .env course_alert
 ```
 
+`docker-entrypoint.sh` validates that `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are set and exits 1 if either is missing — the container will not start without them.
+
 Mount `/data` as a volume for SQLite persistence across container restarts. HTTPS is required in production for Web Push and service workers — platforms like Railway, Render, and Fly.io provide it automatically.
+
+`railway.toml` uses the Dockerfile builder; Railway injects `PORT` automatically.
+
+## Known quirks
+
+- `beautifulsoup4` is listed in `requirements.txt` but unused — the scraper parses HTML with `re` only.
